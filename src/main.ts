@@ -27,6 +27,9 @@ let square: Square;
 let cube: Cube;
 let prevTesselations: number = 5;
 
+let backgroundQuad: Square;
+let backgroundShaderProgram: ShaderProgram;
+
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
@@ -35,6 +38,7 @@ function loadScene() {
   cube = new Cube(vec3.fromValues(0, 0, 0));
   cube.create();
 }
+
 
 function main() {
   // Initial display for framerate
@@ -56,7 +60,7 @@ function main() {
 
   gui.add(controls, 'amplitude', 0.1, 1.0);
   gui.add(controls, 'frequency', 0.1, 5.0);
-  gui.add(controls, 'timeSpeed', 0.1, 10.0);
+  gui.add(controls, 'timeSpeed', 0.01, 3.0);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -71,6 +75,12 @@ function main() {
   // Initial call to load scene
   loadScene();
 
+  backgroundShaderProgram = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/background.vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/background.frag.glsl')),
+  ]);
+
+
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
@@ -84,12 +94,22 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-noise.frag.glsl')),
   ]);
 
+
   // This function will be called every frame
   function tick() {
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
-    renderer.clear();
+
+    gl.disable(gl.DEPTH_TEST);
+
+    renderer.renderBG(camera, backgroundShaderProgram, [
+      square,
+    ]);
+
+    gl.enable(gl.DEPTH_TEST);
+    //renderer.clear();
+
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;

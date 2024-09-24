@@ -89,15 +89,7 @@ float gain(float a, float b) {
 
 void main()
 {
-    // Material base color (before shading)
-
-        // Calculate the diffuse term for Lambert shading
-        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-        float ambientTerm = 1.0;
         
-        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
-                                                            //to simulate ambient lighting. This ensures that faces that are not
-                                                            //lit by our point light are not completely black.
         float distance = length(fs_WorldPos);
         float normalizedDistance = clamp((distance - 0.8) / 0.4, 0.0, 1.0); 
 

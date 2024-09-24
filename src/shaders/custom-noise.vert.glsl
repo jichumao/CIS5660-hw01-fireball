@@ -98,8 +98,8 @@ float fbm(vec3 pos, float time) {
 }
 
 // Easing function: easeInOut
-float easeInOut(float t) {
-    return t < 0.5 ? 2.0 * t * t : -1.0 + (4.0 - 2.0 * t) * t;
+float easeOut(float t) {
+    return t < 0.1 ? t : -1.0 + (4.0 - 2.0 * t) * t;
 }
 
 // Waves function using sine
@@ -121,11 +121,10 @@ void main()
     float lowDisplacement = lowFreqDisplacement(vec3(vs_Pos), u_Time);
 
     //float highDisplacement = fbm(vec3(vs_Pos), u_Time);
-    // 使用 easing 函数平滑时间变量
-    float easedTime = easeInOut(mod(u_Time * 0.1, 1.0));
+    
+    float easedTime = easeOut(mod(u_Time * 0.01, 3.0));
 
-    // 计算高频位移，结合 wave 函数
-    float highDisplacement = fbm(vec3(vs_Pos) * easedTime, u_Time) + waves(u_Time, 5.0, 0.0) * 0.05;
+    float highDisplacement = fbm(vec3(vs_Pos) * easedTime, u_Time) + waves(0.0001 * u_Time, 5.0, 0.0) * 0.001;
     float totalDisplacement = lowDisplacement + highDisplacement;
 
     vec3 displacedPos = vec3(vs_Pos) + vec3(vs_Nor) * totalDisplacement;
