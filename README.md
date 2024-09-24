@@ -4,6 +4,9 @@
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
 
+## Showcase
+[Link to live Demo](https://jichumao.github.io/CIS5660-hw01-fireball/)
+
 ## Getting Started
 
 1. Fork and clone [this repository](https://github.com/CIS700-Procedural-Graphics/Project1-Noise).
