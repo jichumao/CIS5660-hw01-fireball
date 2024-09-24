@@ -77,6 +77,16 @@ vec3 getColor(float displacement) {
     }
 }
 
+// Bias function
+float bias(float a, float b) {
+    return pow(a, log(b) / log(0.5));
+}
+
+// Gain function
+float gain(float a, float b) {
+    return a < 0.5 ? bias(a * 2.0, b) / 2.0 : 1.0 - bias(1.0 - (a - 0.5) * 2.0, b) / 2.0;
+}
+
 void main()
 {
     // Material base color (before shading)
@@ -90,11 +100,14 @@ void main()
                                                             //lit by our point light are not completely black.
         float distance = length(fs_WorldPos);
         float normalizedDistance = clamp((distance - 0.8) / 0.4, 0.0, 1.0); 
+
+        normalizedDistance = smoothstep(0.0, 1.0, normalizedDistance);
+
+        float biasGain = gain(normalizedDistance, 0.5);
+        normalizedDistance = biasGain;
         vec3 color = getColor(normalizedDistance);
 
         // Compute final shaded color
-        //out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
         vec3 finalColor = color;
-        //vec3 finalColor = color * lightIntensity;
         out_Col = vec4(finalColor, u_Color1.a);
 }
