@@ -11,7 +11,11 @@
 // position, light position, and vertex color.
 precision highp float;
 
-uniform vec4 u_Color; // The color with which to render this instance of geometry.
+//uniform vec4 u_Color; // The color with which to render this instance of geometry.
+uniform vec4 u_Color1;
+uniform vec4 u_Color2;
+uniform vec4 u_Color3;
+
 uniform float u_Time;
 
 // These are the interpolated values out of the rasterizer, so you can't know
@@ -19,6 +23,7 @@ uniform float u_Time;
 in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
+in vec3 fs_WorldPos;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -28,30 +33,21 @@ vec3 random3(vec3 gridPoint) {
     float sinX = sin(gridPoint.x * 12.9898 + gridPoint.y * 78.233 + gridPoint.z * 54.578) * 43758.5453;
     float sinY = sin(gridPoint.y * 12.9898 + gridPoint.x * 78.233 + gridPoint.z * 54.578) * 43758.5453;
     float sinZ = sin(gridPoint.z * 12.9898 + gridPoint.y * 78.233 + gridPoint.x * 54.578) * 43758.5453;
-
     return fract(vec3(sinX, sinY, sinZ));
 }
-
 
 vec3 custom_pow(vec3 v, float exponent) {
     return vec3(pow(v.x, exponent), pow(v.y, exponent), pow(v.z, exponent));
 }
 
-
 float surflet3D(vec3 p, vec3 gridPoint) {
     vec3 t2 = abs(p - gridPoint);
-
     vec3 t = vec3(1.0) - 6.0 * custom_pow(t2, 5.0) + 15.0 * custom_pow(t2, 4.0) - 10.0 * custom_pow(t2, 3.0);
-
     vec3 gradient = normalize(random3(gridPoint) * 2.0 - vec3(1.0));
-
     vec3 diff = p - gridPoint;
-
     float height = dot(diff, gradient);
-
     return height * t.x * t.y * t.z;
 }
-
 
 float perlinNoise3D(vec3 p) {
     float surfletSum = 0.0;
@@ -63,27 +59,42 @@ float perlinNoise3D(vec3 p) {
             }
         }
     }
-    
     return surfletSum;
 }
 
+// Simple function to get a color based on a displacement value
+vec3 getColor(float displacement) {
+    // vec3 color1 = vec3(1.0, 0.5, 0.0); 
+    // vec3 color2 = vec3(1.0, 1.0, 0.0); 
+    // vec3 color3 = vec3(1.0, 0.0, 0.0); 
+    vec3 color1 = u_Color1.xyz;
+    vec3 color2 = u_Color2.xyz;
+    vec3 color3 = u_Color3.xyz;
+    if (displacement < 0.0) {
+        return mix(color1, color2, displacement * -1.0);
+    } else {
+        return mix(color2, color3, displacement);
+    }
+}
 
 void main()
 {
     // Material base color (before shading)
-        vec4 diffuseColor = u_Color;
 
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-
-        float ambientTerm = 0.3;
+        float ambientTerm = 1.0;
         
         float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
-
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.0, 0.0, 0.0), perlinNoise3D(diffuseColor.rgb * 0.1 + u_Time * 0.005));
+        float distance = length(fs_WorldPos);
+        float normalizedDistance = clamp((distance - 0.8) / 0.4, 0.0, 1.0); 
+        vec3 color = getColor(normalizedDistance);
 
         // Compute final shaded color
-        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+        //out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+        vec3 finalColor = color;
+        //vec3 finalColor = color * lightIntensity;
+        out_Col = vec4(finalColor, u_Color1.a);
 }
